@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#09070e">
+  <meta name="description" content="Buscá películas y series, compará sus valoraciones y encontrá dónde verlas.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Butaca">
+  <title>Butaca</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/assets/butaca-logo.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="/assets/butaca-logo.jpg">
+  <style>
+    :root{color-scheme:dark;--bg:#09070e;--panel:#14111a;--line:#2d2539;--text:#faf8ff;--muted:#a39aaf;--purple:#a56bff;--purple-light:#c6a2ff;--purple-dark:#7442cb;--radius:18px}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .app{min-height:100vh;min-height:100svh;padding:24px 24px calc(36px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;position:relative}
+    .settings{position:absolute;right:max(24px,env(safe-area-inset-right));top:max(22px,env(safe-area-inset-top));width:42px;height:42px;border:1px solid transparent;border-radius:50%;background:transparent;color:#93889f;font-size:20px;display:grid;place-items:center;transition:.18s}
+    .settings:hover,.settings:focus-visible{border-color:var(--line);background:var(--panel);color:var(--text);outline:none}
+    .home{width:min(100%,1000px);margin:36px auto 32px;display:flex;flex-direction:column;align-items:center;gap:28px}
+    .search-primary{width:min(100%,620px);display:flex;flex-direction:column;align-items:center;gap:26px}
+    .brand{display:flex;flex-direction:column;align-items:center;gap:10px;text-decoration:none;border-radius:22px}
+    .brand:focus-visible{outline:2px solid var(--purple-light);outline-offset:6px}
+    .logo-icon{width:112px;height:112px;display:block;object-fit:contain;border-radius:22px}
+    h1{font-size:clamp(54px,12vw,76px);line-height:1;letter-spacing:-4px;font-weight:650;margin:0;color:var(--text)}
+    .media-switch{display:inline-flex;gap:4px;padding:4px;border:1px solid #48345f;border-radius:999px;background:#100d15}
+    .media-option{min-width:112px;min-height:36px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:#c6b8d8;font-size:13px;font-weight:600;transition:background .18s,color .18s,box-shadow .18s}
+    .media-option[aria-pressed="true"]{background:var(--purple-dark);color:white;box-shadow:0 0 18px #7442cb55}
+    .media-option:focus-visible{outline:2px solid var(--purple-light);outline-offset:2px}
+    .search-form{display:flex;align-items:center;width:100%;height:60px;padding:0 8px 0 20px;border:1px solid #40334f;border-radius:999px;background:#100d15;box-shadow:0 8px 36px #0005;transition:border-color .18s,box-shadow .18s}
+    .search-form:focus-within{border-color:var(--purple);box-shadow:0 0 0 3px #a56bff24,0 8px 36px #0005}
+    .search-icon{width:23px;height:23px;flex:0 0 auto;color:#b7a3d4;margin-right:13px}
+    .search-input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:16px}
+    .search-input::placeholder{color:#81788a}
+    .search-submit{border:0;border-radius:999px;width:44px;height:44px;background:var(--purple-dark);color:white;display:grid;place-items:center;transition:background .18s,transform .18s}
+    .search-submit:hover{background:var(--purple);transform:scale(1.03)}
+    .search-submit svg{width:19px;height:19px}
+    .install{min-height:42px;padding:0 17px;border:1px solid #48345f;border-radius:999px;color:var(--purple-light);background:transparent;font-size:13px;font-weight:600;transition:.18s}
+    .install:hover{background:#a56bff16;border-color:var(--purple);color:white}
+    .install-icon{font-size:16px;margin-right:7px;vertical-align:-1px}
+    .home-trends{width:100%;display:flex;flex-direction:column;gap:24px}
+    .home-trends[hidden]{display:none}
+    .trend-section{width:100%}
+    .trend-heading{font-size:17px;font-weight:650;letter-spacing:-.25px;margin:0 0 13px}
+    .trend-rail{display:grid;grid-template-columns:repeat(5,minmax(0,150px));justify-content:space-between;gap:14px}
+    .trend-card{min-width:0;padding:0;border:0;background:transparent;color:var(--text);text-align:left;border-radius:11px;overflow:hidden}
+    .trend-card:focus-visible{outline:2px solid var(--purple-light);outline-offset:4px}
+    .trend-card:hover .trend-poster{transform:translateY(-3px);box-shadow:0 10px 26px #0009,0 0 0 1px #a56bff80}
+    .trend-poster{display:block;width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:9px;background:#1a1423;box-shadow:0 6px 18px #0006;transition:transform .18s,box-shadow .18s}
+    .trend-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin-top:8px;font-size:12px;font-weight:600;line-height:1.35}
+    .trend-message{grid-column:1/-1;color:var(--muted);font-size:12px;padding:18px 2px}
+    .results{width:min(100%,680px);margin:0 auto 24px;display:block}
+    .results.visible{display:block}
+    .hidden{display:none!important}
+    .results-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;padding:0 4px}
+    .results-head h2{font-size:14px;font-weight:600;color:#c5bbcF;margin:0}
+    .results-count{font-size:12px;color:var(--muted)}
+    .search-suggestion{margin:0 4px 12px;color:var(--muted);font-size:13px;line-height:1.5}
+    .search-suggestion button{padding:0;border:0;background:transparent;color:var(--purple-light);font:inherit;font-weight:650;text-decoration:underline;text-underline-offset:3px}
+    .result-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:15px;overflow:hidden;background:#100d15}
+    .result-row{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;text-align:left;padding:12px 16px;border:0;border-bottom:1px solid #282130;background:transparent;color:var(--text)}
+    .result-row:last-child{border-bottom:0}
+    .result-row:hover,.result-row:focus-visible{background:#1b1524;outline:none}
+    .result-title{flex:1;font-weight:550;font-size:15px}
+    .result-year{color:var(--muted);font-size:13px;white-space:nowrap}
+    .detail{margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:17px;background:#100d15;scroll-margin-top:18px}
+    .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+    .movie-heading{display:flex;align-items:flex-start;gap:14px;min-width:0}
+    .movie-poster{width:86px;aspect-ratio:2/3;flex:0 0 auto;object-fit:cover;border-radius:9px;background:#1a1423;box-shadow:0 6px 18px #0006}
+    .poster-placeholder{display:grid;place-items:center;color:var(--purple-light);font-size:24px}
+    .movie-heading-copy{min-width:0;padding-top:2px}
+    .detail-title{font-size:23px;line-height:1.2;font-weight:650;margin:0 0 6px;letter-spacing:-.6px}
+    .detail-meta{font-size:12px;color:var(--muted)}
+    .detail-director{font-size:12px;color:#c7bbd4;margin-top:6px}
+    .detail-cast{font-size:12px;color:#c7bbd4;margin-top:5px}
+    .awards-won{font-size:12px;color:#f1c76b;margin-top:7px;line-height:1.4}
+    .back{border:0;background:transparent;color:var(--purple-light);font-size:12px;padding:5px 0;white-space:nowrap}
+    .back:hover{text-decoration:underline}
+    .score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:19px}
+    .series .score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .score{min-height:69px;padding:11px 12px;border:1px solid #30273d;border-radius:11px;background:#17131d}
+    .score-label{display:flex;align-items:center;gap:6px;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:#a69bad;font-weight:700}
+    .rating-logo{width:17px;height:17px;object-fit:contain;flex:0 0 auto}
+    .score-value{font-size:19px;font-weight:650;margin-top:7px}
+    .score-value small{font-size:10px;color:var(--muted);font-weight:500}
+    .rt-values{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:8px;font-size:11px}
+    .critic{color:#ff9c89}.audience{color:#d6b8ff}
+    .availability{margin-top:20px}
+    .availability-title{font-size:13px;font-weight:650;margin:0 0 11px}
+    .offer-list{display:flex;flex-direction:column;gap:9px}
+    .offer-line{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:start}
+    .offer-kind{font-size:11px;color:var(--muted);padding-top:5px}
+    .provider-list{display:flex;flex-wrap:wrap;gap:6px}
+    .provider{display:inline-flex;align-items:center;gap:7px;font-size:12px;padding:5px 10px 5px 6px;border:1px solid #3c3050;border-radius:999px;background:#1a1423;color:#e8dcf9}
+    .provider-logo{width:24px;height:24px;flex:0 0 auto;object-fit:cover;border-radius:6px;background:#fff}
+    .justwatch{display:inline-block;margin-top:14px;color:var(--purple-light);font-size:11px;text-decoration:none}
+    .justwatch:hover{text-decoration:underline}
+    .episode-section{margin-top:22px}
+    .episode-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .episode-heading h3{font-size:14px;font-weight:650;margin:0}
+    .episode-note{font-size:10px;color:var(--muted);line-height:1.45}
+    .episode-legend{display:flex;flex-wrap:wrap;gap:8px 12px;margin:0 0 10px;color:#cfc5d8;font-size:10px}
+    .legend-item{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    .legend-dot{width:8px;height:8px;border-radius:3px;display:inline-block}
+    .episode-chart-scroll{overflow-x:auto;overscroll-behavior-inline:contain;padding-bottom:7px}
+    .episode-chart{display:grid;grid-template-columns:40px repeat(var(--season-count),minmax(45px,1fr));gap:4px;min-width:max-content}
+    .episode-corner,.episode-season,.episode-row-label,.episode-average-label{display:grid;place-items:center;min-height:22px;color:var(--muted);font-size:10px}
+    .episode-season{color:#d9c8f3;font-weight:650}
+    .episode-row-label{justify-content:end;padding-right:5px}
+    .episode-cell{min-width:45px;height:30px;display:grid;place-items:center;border-radius:5px;color:#08070b;font-size:13px;font-weight:700}
+    .episode-cell.empty{background:#211b29;color:#736b7b;font-size:11px;font-weight:500}
+    .episode-cell.score-top{background:#23a76b;color:#07150e}
+    .episode-cell.score-high{background:#72bd46;color:#101609}
+    .episode-cell.score-mid{background:#e3c441;color:#1c1707}
+    .episode-cell.score-low{background:#e78b37;color:#211307}
+    .episode-cell.score-poor{background:#d84d45;color:#fff}
+    .episode-average{display:grid;place-items:center;min-width:45px;min-height:27px;color:#e9d9ff;font-size:12px;font-weight:700;border-top:1px solid #40334f}
+    .episode-footnote{margin:8px 0 0;color:#8f849a;font-size:10px;line-height:1.45}
+    .episode-footnote a{color:#d9c8f3}
+    .status{width:min(100%,680px);margin:0 auto 24px;text-align:center;color:var(--muted);font-size:13px;line-height:1.55}
+    .status a{color:var(--purple-light);cursor:pointer}
+    .loading{color:var(--purple-light)}
+    .tmdb-attribution{width:min(100%,680px);margin:-4px auto 0;padding:14px 4px 2px;display:flex;align-items:center;gap:12px;color:#a39aaf;font-size:10px;line-height:1.45}
+    .tmdb-attribution img{width:76px;height:auto;flex:0 0 auto}
+    .tmdb-attribution a{display:inline-flex}
+    .site-footer{width:100%;margin-top:auto;padding:18px 8px 2px;text-align:center;color:#91879c;font-size:11px;line-height:1.5}
+    .site-footer a{color:var(--purple-light);text-decoration:none}
+    .site-footer a:hover,.site-footer a:focus-visible{text-decoration:underline;text-underline-offset:3px}
+    .modal-backdrop{position:fixed;inset:0;z-index:5;background:#050409d9;display:grid;place-items:center;padding:18px}
+    .modal-backdrop[hidden],.status[hidden],.results[hidden]{display:none}
+    .modal{width:min(100%,430px);border:1px solid #49395d;background:#14111a;border-radius:18px;padding:22px;box-shadow:0 24px 80px #0009}
+    .modal-head{display:flex;align-items:center;justify-content:space-between}
+    .modal h2{font-size:20px;margin:0;letter-spacing:-.4px}
+    .close{border:0;background:none;color:#a79cad;font-size:24px;padding:0 3px}
+    .modal-copy{font-size:12px;color:var(--muted);line-height:1.5;margin:10px 0 17px}
+    .field{margin:14px 0}
+    .field label{display:block;font-size:12px;font-weight:650;margin-bottom:7px}
+    .field input{width:100%;height:43px;border:1px solid #40364d;border-radius:9px;background:#0d0a12;color:var(--text);padding:0 11px;outline:none}
+    .field input:focus{border-color:var(--purple)}
+    .field-note{font-size:10px;color:#a39aaf;line-height:1.45;margin-top:6px}
+    .field-note a{color:var(--purple-light)}
+    .modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+    .modal-actions button{border-radius:9px;padding:10px 14px;font-size:12px;font-weight:650}
+    .cancel{border:1px solid #40364d;background:transparent;color:#c4b9cf}
+    .save{border:0;background:var(--purple-dark);color:white}
+    .save:hover{background:var(--purple)}
+    .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));z-index:7;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:12px 16px;border:1px solid #594572;border-radius:13px;background:#20192a;color:#f7f0ff;font-size:12px;line-height:1.45;box-shadow:0 8px 30px #0009;text-align:center}
+    @media(max-width:560px){.app{padding:18px 18px calc(25px + env(safe-area-inset-bottom))}.settings{right:15px;top:max(14px,env(safe-area-inset-top))}.home{gap:24px;margin:24px auto}.search-primary{gap:21px}.logo-icon{width:92px;height:92px;border-radius:18px}h1{letter-spacing:-3px}.media-option{min-width:104px}.search-form{height:56px;padding-left:16px}.search-submit{width:40px;height:40px}.trend-rail{display:flex;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x mandatory;padding:2px 2px 10px;margin-right:-2px}.trend-card{flex:0 0 126px;scroll-snap-align:start}.trend-heading{font-size:15px;margin-bottom:10px}.score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.score-grid .score:nth-child(3){grid-column:1/-1}.series .score-grid .score:nth-child(3){grid-column:auto}.detail{padding:16px}.detail-title{font-size:20px}.movie-poster{width:72px}.detail-top{gap:10px}.offer-line{grid-template-columns:88px minmax(0,1fr);gap:8px}.result-row{gap:9px;padding:11px 12px}.result-title{font-size:13px}.result-year{font-size:11px}.episode-cell{height:28px;font-size:12px}.episode-chart{grid-template-columns:34px repeat(var(--season-count),minmax(43px,1fr))}}
+    @media(max-width:360px){.result-row{flex-wrap:wrap}.result-title{flex-basis:100%}.result-year{margin-left:0}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="home" aria-label="Buscar películas o series">
+      <div class="search-primary">
+        <a class="brand" href="/" aria-label="Ir al inicio de Butaca">
+          <img class="logo-icon" src="/assets/butaca-logo.jpg" alt="" width="112" height="112">
+          <h1>Butaca</h1>
+        </a>
+        <div class="media-switch" role="group" aria-label="Tipo de contenido">
+          <button class="media-option" id="mode-movie" type="button" aria-pressed="true">Películas</button>
+          <button class="media-option" id="mode-tv" type="button" aria-pressed="false">Series</button>
+        </div>
+        <form class="search-form" id="search-form" role="search">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.1 4.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input class="search-input" id="query" type="search" placeholder="Buscar una película" aria-label="Buscar una película" autocomplete="off">
+          <button class="search-submit" type="submit" aria-label="Buscar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </form>
+      </div>
+      <section class="home-trends" id="home-trends" aria-label="Tendencias actuales">
+        <section class="trend-section" aria-labelledby="trending-movies-title">
+          <h2 class="trend-heading" id="trending-movies-title">Películas en tendencia en streaming</h2>
+          <div class="trend-rail" id="trending-movies" aria-label="Películas en tendencia en streaming"><span class="trend-message">Cargando películas…</span></div>
+        </section>
+        <section class="trend-section" aria-labelledby="trending-series-title">
+          <h2 class="trend-heading" id="trending-series-title">Series en tendencia en streaming</h2>
+          <div class="trend-rail" id="trending-series" aria-label="Series en tendencia en streaming"><span class="trend-message">Cargando series…</span></div>
+        </section>
+      </section>
+      <button class="install" id="install-btn" type="button"><span class="install-icon">＋</span>Instalar aplicación</button>
+    </section>
+    <section class="results" id="results" aria-live="polite" hidden>
+      <div id="search-results"></div>
+      <div id="movie-detail"></div>
+    </section>
+    <div class="tmdb-attribution" id="tmdb-attribution" hidden>
+      <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" aria-label="The Movie Database"><img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" alt="TMDB"></a>
+      <span>This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
+    </div>
+    <div class="status" id="status" role="status" hidden></div>
+    <footer class="site-footer">For support, contact <a href="https://www.instagram.com/richardspulgar/" target="_blank" rel="noopener noreferrer">@richardspulgar</a></footer>
+  </main>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script>
+    (function(){
+      "use strict";
+      var app=document.querySelector(".app");
+      var form=document.getElementById("search-form");
+      var query=document.getElementById("query");
+      var status=document.getElementById("status");
+      var results=document.getElementById("results");
+      var searchResults=document.getElementById("search-results");
+      var detail=document.getElementById("movie-detail");
+      var homeTrends=document.getElementById("home-trends");
+       var tmdbAttribution=document.getElementById("tmdb-attribution");
+      var toast=document.getElementById("toast");
+      var pendingInstall=null;
+       var toastTimer=null;
+       var mediaType="movie";
+       var detailFromHome=false;
+
+      function esc(value){return String(value==null?"":value).replace(/[&<>"']/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]})}
+      function showToast(text){toast.textContent=text;toast.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.hidden=true},4200)}
+      function setStatus(text,linkText,linkAction){status.hidden=false;status.textContent="";var span=document.createElement("span");span.textContent=text;status.appendChild(span);if(linkText){var a=document.createElement("a");a.href="#";a.textContent=" "+linkText;a.addEventListener("click",function(e){e.preventDefault();linkAction()});status.appendChild(a)}}
+      function clearStatus(){status.hidden=true;status.textContent=""}
+      async function api(path){
+        var response=await fetch(path,{cache:"no-store"});
+        if(!response.ok){
+          if(response.status===401)throw new Error("El código de acceso no es correcto.");
+           var message="No se pudo consultar Butaca ("+response.status+").";
+          try{var body=await response.json();if(body&&body.error)message=body.error}catch(e){}
+          throw new Error(message);
+        }
+        return response.json();
+      }
+      function poster(path){return path?"https://image.tmdb.org/t/p/w500"+path:""}
+       function setMediaType(next){
+         mediaType=next;
+         var isMovie=next==="movie";
+         document.getElementById("mode-movie").setAttribute("aria-pressed",String(isMovie));
+         document.getElementById("mode-tv").setAttribute("aria-pressed",String(!isMovie));
+         query.placeholder=isMovie?"Buscar una película":"Buscar una serie";
+         query.setAttribute("aria-label",isMovie?"Buscar una película":"Buscar una serie");
+         detail.innerHTML="";searchResults.innerHTML="";searchResults.classList.remove("hidden");results.hidden=true;tmdbAttribution.hidden=true;clearStatus();
+         homeTrends.hidden=false;
+       }
+       document.getElementById("mode-movie").addEventListener("click",function(){setMediaType("movie")});
+       document.getElementById("mode-tv").addEventListener("click",function(){setMediaType("tv")});
+       form.addEventListener("submit",function(e){e.preventDefault();var q=query.value.trim();if(q)searchTitles(q)});
+
+       async function searchTitles(q){
+        detailFromHome=false;homeTrends.hidden=true;clearStatus();detail.innerHTML="";searchResults.innerHTML="";searchResults.classList.remove("hidden");results.hidden=true;tmdbAttribution.hidden=true;
+        setStatus("Buscando…");
+        try{
+           var type=mediaType,isMovie=type==="movie",kind=isMovie?"película":"serie";
+           var data=await api("/api/search?q="+encodeURIComponent(q)+"&type="+type);
+           var movies=(data.results||[]).filter(function(m){return isMovie?m.title:m.name}).slice(0,10);
+          clearStatus();
+           tmdbAttribution.hidden=false;
+           if(!movies.length){setStatus("No encontramos esa "+kind+".");return}
+          results.hidden=false;
+          if(data.did_you_mean){
+            var suggestion=document.createElement("div");suggestion.className="search-suggestion";
+            var lead=document.createElement("span");lead.textContent="¿Quisiste decir ";
+            var choice=document.createElement("button");choice.type="button";choice.textContent=data.did_you_mean;
+             choice.addEventListener("click",function(){query.value=data.did_you_mean;searchTitles(data.did_you_mean)});
+            suggestion.append(lead,choice,document.createTextNode("?"));searchResults.appendChild(suggestion);
+          }
+          var head=document.createElement("div");head.className="results-head";
+          head.innerHTML="<h2>"+(data.did_you_mean?"Resultados sugeridos":"Resultados")+"</h2><span class=\"results-count\">"+movies.length+"</span>";
+          var list=document.createElement("div");list.className="result-list";
+          movies.forEach(function(movie){
+            var row=document.createElement("button");row.type="button";row.className="result-row";
+             var title=document.createElement("span");title.className="result-title";title.textContent=isMovie?movie.title:movie.name;
+             var year=document.createElement("span");year.className="result-year";year.textContent=(isMovie?(movie.release_date||""):(movie.first_air_date||"")).slice(0,4)||"—";
+             row.append(title,year);row.addEventListener("click",function(){loadTitle(movie,type)});list.appendChild(row);
+          });
+          searchResults.append(head,list);
+           if(movies.length===1&&!data.did_you_mean)loadTitle(movies[0],type);
+        }catch(error){
+          clearStatus();setStatus(error.message);
+        }
+       }
+
+       function renderTrending(type,data){
+         var rail=document.getElementById(type==="tv"?"trending-series":"trending-movies");
+         var items=(data.results||[]).filter(function(title){return title.poster_path&&(type==="tv"?title.name:title.title)}).slice(0,5);
+         rail.textContent="";
+         if(!items.length){var empty=document.createElement("span");empty.className="trend-message";empty.textContent="No hay tendencias disponibles ahora.";rail.appendChild(empty);return}
+         items.forEach(function(title){
+           var titleText=type==="tv"?title.name:title.title;
+           var card=document.createElement("button");card.type="button";card.className="trend-card";card.setAttribute("aria-label","Ver "+titleText);
+           var image=document.createElement("img");image.className="trend-poster";image.src=poster(title.poster_path);image.alt="";image.loading="lazy";image.decoding="async";
+           var name=document.createElement("span");name.className="trend-title";name.textContent=titleText;
+           card.append(image,name);
+           card.addEventListener("click",function(){setMediaType(type);query.value=titleText;loadTitle(title,type,true)});
+           rail.appendChild(card);
+         });
+       }
+       async function loadHomeTrends(){
+         var responses=await Promise.allSettled([api("/api/trending?type=movie"),api("/api/trending?type=tv")]);
+         responses.forEach(function(response,index){
+           var type=index===0?"movie":"tv";
+           if(response.status==="fulfilled")renderTrending(type,response.value);
+           else{var rail=document.getElementById(type==="tv"?"trending-series":"trending-movies");rail.textContent="";var message=document.createElement("span");message.className="trend-message";message.textContent="No se pudieron cargar ahora.";rail.appendChild(message)}
+         });
+       }
+       function returnFromDetail(){
+         detail.innerHTML="";clearStatus();
+         if(detailFromHome){detailFromHome=false;results.hidden=true;homeTrends.hidden=false;document.querySelector(".home").scrollIntoView({behavior:"smooth",block:"start"});return}
+         searchResults.classList.remove("hidden");searchResults.scrollIntoView({behavior:"smooth",block:"start"});
+       }
+       function handleDetailError(error){clearStatus();if(detailFromHome){detailFromHome=false;results.hidden=true;homeTrends.hidden=false;setStatus(error.message);return}searchResults.classList.remove("hidden");setStatus(error.message)}
+       function loadTitle(title,type,fromHome){detailFromHome=!!fromHome;if(fromHome)homeTrends.hidden=true;if(type==="tv")loadSeries(title);else loadMovie(title)}
+
+      function getRating(ratings,match){return ratings.find(function(item){return match((item.source||"").toLowerCase())})||null}
+      function ratingValue(item){if(!item)return "";var value=item.value!=null?item.value:item.score;if(value==null||String(value).toLowerCase()==="n/a")return "";return String(value)}
+      function scoreCard(label,value,suffix,logo){return "<div class=\"score\"><div class=\"score-label\"><img class=\"rating-logo\" src=\"/assets/ratings/"+logo+".svg\" alt=\"\" width=\"17\" height=\"17\">"+label+"</div><div class=\"score-value\">"+(value?esc(value)+"<small>"+suffix+"</small>":"—")+"</div></div>"}
+      function showAwards(awards,movieId){
+        var parts=[],oscars=Number(awards&&awards.oscars)||0,globes=Number(awards&&awards.golden_globes)||0;
+        if(oscars>0)parts.push(oscars+" "+(oscars===1?"Oscar":"Oscars"));
+        if(globes>0)parts.push(globes+" "+(globes===1?"Globo de Oro":"Globos de Oro"));
+        if(!parts.length)return;
+        var card=detail.querySelector(".detail"),copy=card&&card.querySelector(".movie-heading-copy");
+        if(!copy||card.dataset.movieId!==String(movieId))return;
+        var line=document.createElement("div");line.className="awards-won";line.textContent="Ganadora de "+parts.join(" y ");copy.appendChild(line);
+      }
+      function providersHtml(title,list){
+        if(!list||!list.length)return "";
+        var seen={};
+        var unique=list.filter(function(provider){var name=(provider.provider_name||"").trim(),key=name.toLowerCase();if(!key||seen[key])return false;seen[key]=true;return true});
+        if(!unique.length)return "";
+        return "<div class=\"offer-line\"><div class=\"offer-kind\">"+title+"</div><div class=\"provider-list\">"+unique.map(function(provider){var logo=provider.logo_path?"<img class=\"provider-logo\" src=\"https://image.tmdb.org/t/p/w92"+esc(provider.logo_path)+"\" alt=\"\" loading=\"lazy\">":"";return "<span class=\"provider\">"+logo+"<span>"+esc(provider.provider_name)+"</span></span>"}).join("")+"</div></div>";
+      }
+      async function loadMovie(movie){
+        clearStatus();searchResults.classList.add("hidden");detail.innerHTML="";results.hidden=false;
+        setStatus("Cargando…");
+        try{
+          var ratingParams=new URLSearchParams();
+          if(movie.original_title)ratingParams.set("original_title",movie.original_title);
+          if(movie.title)ratingParams.set("title",movie.title);
+          var ratingUrl="/api/ratings/"+movie.id+(ratingParams.toString()?"?"+ratingParams.toString():"");
+          var records=await Promise.all([api("/api/movie/"+movie.id),api("/api/watch/"+movie.id),api(ratingUrl)]);
+          var info=records[0],watch=records[1],mdb=records[2],region=watch.results&&watch.results.AR;
+          var ratings=mdb&&mdb.ratings||[];
+          var imdb=getRating(ratings,function(s){return s.indexOf("imdb")!==-1});
+          var letterboxd=getRating(ratings,function(s){return s.indexOf("letterboxd")!==-1});
+          var tomatoesCritic=getRating(ratings,function(s){return s.indexOf("tomato")!==-1&&s.indexOf("audience")===-1&&s.indexOf("popcorn")===-1});
+          var tomatoesAudience=getRating(ratings,function(s){return s.indexOf("audience")!==-1||s.indexOf("popcorn")!==-1});
+          var rtCritic=ratingValue(tomatoesCritic),rtAudience=ratingValue(tomatoesAudience);
+          var directorNames=(info.credits&&info.credits.crew||[]).filter(function(person){return person.job==="Director"&&person.name}).map(function(person){return person.name}).filter(function(name,index,names){return names.indexOf(name)===index}).slice(0,3);
+          var protagonistNames=(info.credits&&info.credits.cast||[]).filter(function(person){return person.name}).map(function(person){return person.name}).filter(function(name,index,names){return names.indexOf(name)===index}).slice(0,2);
+          var genre=(info.genres||[]).slice(0,2).map(function(g){return esc(g.name)}).join(" · ");
+          var year=(info.release_date||"").slice(0,4);
+          var posterHtml=info.poster_path?"<img class=\"movie-poster\" src=\""+esc(poster(info.poster_path))+"\" alt=\"Póster de "+esc(info.title)+"\" loading=\"eager\">":"<div class=\"movie-poster poster-placeholder\" role=\"img\" aria-label=\"Póster no disponible\">🎬</div>";
+          var markup="<article class=\"detail\" data-movie-id=\""+esc(movie.id)+"\"><div class=\"detail-top\"><div class=\"movie-heading\">"+posterHtml+"<div class=\"movie-heading-copy\"><h2 class=\"detail-title\">"+esc(info.title)+"</h2><div class=\"detail-meta\">"+esc(year)+(info.runtime?" · "+info.runtime+" min":"")+(genre?" · "+genre:"")+"</div>"+(directorNames.length?"<div class=\"detail-director\">Dirección: "+esc(directorNames.join(", "))+"</div>":"")+(protagonistNames.length?"<div class=\"detail-cast\">Protagonistas: "+esc(protagonistNames.join(", "))+"</div>":"")+"</div></div><button class=\"back\" type=\"button\" id=\"back-results\">"+(detailFromHome?"← Inicio":"← Resultados")+"</button></div>";
+          markup+="<div class=\"score-grid\">"+scoreCard("IMDb",ratingValue(imdb)," / 10","imdb")+scoreCard("Letterboxd",ratingValue(letterboxd)," / 5","letterboxd");
+          markup+="<div class=\"score\"><div class=\"score-label\"><img class=\"rating-logo\" src=\"/assets/ratings/rottentomatoes.svg\" alt=\"\" width=\"17\" height=\"17\">Rotten Tomatoes</div><div class=\"rt-values\"><span class=\"critic\">Crítica "+(rtCritic?esc(rtCritic)+(rtCritic.indexOf("%")<0?"%":""):"—")+"</span><span class=\"audience\">Audiencia "+(rtAudience?esc(rtAudience)+(rtAudience.indexOf("%")<0?"%":""):"—")+"</span></div></div>";
+          markup+="</div>";
+          markup+="<div class=\"availability\"><h3 class=\"availability-title\">Dónde verla en Argentina</h3><div class=\"offer-list\">"+providersHtml("Streaming",region&&region.flatrate)+providersHtml("Gratis / con anuncios",[...(region&&region.free||[]),...(region&&region.ads||[])])+providersHtml("Alquiler / compra",[...(region&&region.rent||[]),...(region&&region.buy||[])])+"</div>";
+          if(!region||!((region.flatrate||[]).length||(region.free||[]).length||(region.ads||[]).length||(region.rent||[]).length||(region.buy||[]).length))markup+="<div class=\"detail-meta\">Sin datos disponibles por ahora.</div>";
+          if(region&&region.link)markup+="<a class=\"justwatch\" href=\""+esc(region.link)+"\" target=\"_blank\" rel=\"noreferrer\">Ver opciones en JustWatch ↗</a>";
+          markup+="</div></article>";
+          clearStatus();detail.innerHTML=markup;
+          document.getElementById("back-results").addEventListener("click",returnFromDetail);
+          document.querySelector(".detail").scrollIntoView({behavior:"smooth",block:"start"});
+          var awardParams=new URLSearchParams();
+          if(info.original_title)awardParams.set("original_title",info.original_title);
+          if(info.title)awardParams.set("title",info.title);
+          if(year)awardParams.set("year",year);
+          api("/api/awards/"+movie.id+"?"+awardParams.toString()).then(function(awards){showAwards(awards,movie.id)}).catch(function(){});
+        }catch(error){handleDetailError(error)}
+      }
+
+      function episodeScoreClass(score){
+        if(score>=8.5)return "score-top";
+        if(score>=7)return "score-high";
+        if(score>=6)return "score-mid";
+        if(score>=5)return "score-low";
+        return "score-poor";
+      }
+      function hasEpisodeRating(value){
+        return Number.isFinite(value) && value >= 1 && value <= 10;
+      }
+
+      function episodeCell(episode, seasonNumber){
+        if(!episode) return "<div class=\"episode-cell empty\" aria-hidden=\"true\">·</div>";
+        const label = "T" + seasonNumber + " E" + episode.number + (episode.title ? " · " + episode.title : "");
+        if(!hasEpisodeRating(episode.rating)){
+          return "<div class=\"episode-cell empty\" title=\"" + esc(label + " · Sin puntuación de IMDb") + "\">—</div>";
+        }
+        const score = episode.rating.toFixed(1);
+        return "<div class=\"episode-cell " + episodeScoreClass(episode.rating) + "\" title=\"" +
+          esc(label + " · " + score + "/10") + "\">" + score + "</div>";
+      }
+
+      async function loadEpisodeGrid(info, mdb){
+        const container = document.getElementById("episode-grid");
+        if(!container) return;
+        const section = container.closest(".episode-section");
+        const note = message => {
+          const status = document.createElement("div");
+          status.className = "episode-note";
+          status.setAttribute("role", "status");
+          status.textContent = message;
+          container.replaceChildren(status);
+        };
+        const linkedImdbId = String(mdb?.ids?.tmdb) === String(info.id) ? mdb.ids.imdb : null;
+        const imdbId = [info.external_ids?.imdb_id, linkedImdbId].find(id => /^tt[0-9]{7,12}$/.test(id));
+        if(!imdbId){
+          note("Esta serie todavía no tiene un identificador de IMDb.");
+          return;
+        }
+        section.querySelector(".episode-source").href = "https://www.imdb.com/title/" + imdbId + "/episodes/";
+        note("Cargando puntuaciones de IMDb…");
+
+        const endpoint = "/api/episode-ratings/" + imdbId;
+        let seasons;
+        try{
+          const catalog = await api(endpoint);
+          if(catalog.source !== "imdb" || !Array.isArray(catalog.seasons)) throw new Error("Fuente de episodios inválida.");
+          seasons = [...new Set(catalog.seasons.filter(number => Number.isInteger(number) && number > 0))].sort((a,b) => a-b);
+          if(catalog.provider === "dataset") section.querySelector(".episode-credit-dataset").hidden = false;
+          if(catalog.provider === "omdb") section.querySelector(".episode-credit-omdb").hidden = false;
+        }catch(error){
+          if(container.isConnected) note("No se pudieron consultar las puntuaciones de IMDb. Volvé a abrir la ficha para reintentar.");
+          return;
+        }
+        if(!container.isConnected) return;
+        if(!seasons.length){
+          note("IMDb todavía no tiene episodios numerados para esta serie.");
+          return;
+        }
+
+        const seasonData = new Array(seasons.length).fill(null);
+        let cursor = 0;
+        async function loadSeasons(){
+          while(container.isConnected && cursor < seasons.length){
+            const index = cursor++;
+            try{
+              const data = await api(endpoint + "/" + seasons[index]);
+              if(data.source === "imdb" && Array.isArray(data.episodes)) seasonData[index] = data.episodes;
+            }catch(error){}
+          }
+        }
+        await Promise.all(Array.from({length:Math.min(4,seasons.length)},loadSeasons));
+        if(!container.isConnected) return;
+
+        const incomplete = seasonData.includes(null);
+        const bySeason = seasonData.map(episodes => new Map((episodes || []).map(episode => [episode.number,episode])));
+        const episodeNumbers = [...new Set(bySeason.flatMap(episodes => [...episodes.keys()]))].sort((a,b) => a-b);
+        if(!episodeNumbers.length){
+          note(incomplete ? "No se pudieron consultar las puntuaciones de IMDb. Volvé a abrir la ficha para reintentar."
+            : "IMDb todavía no tiene episodios numerados para esta serie.");
+          return;
+        }
+
+        let chart = "<div class=\"episode-chart-scroll\"><div class=\"episode-chart\" style=\"--season-count:" +
+          seasons.length + "\"><div class=\"episode-corner\"></div>";
+        for(const season of seasons) chart += "<div class=\"episode-season\">T" + season + "</div>";
+        for(const episodeNumber of episodeNumbers){
+          chart += "<div class=\"episode-row-label\">E" + episodeNumber + "</div>";
+          bySeason.forEach((episodes,index) => { chart += episodeCell(episodes.get(episodeNumber),seasons[index]); });
+        }
+        chart += "<div class=\"episode-average-label\">Prom.</div>";
+        for(const episodes of bySeason){
+          const values = [...episodes.values()].map(episode => episode.rating).filter(hasEpisodeRating);
+          const totalTenths = values.reduce((sum,value) => sum + Math.round(value * 10),0);
+          const average = values.length ? (Math.round(totalTenths / values.length) / 10).toFixed(1) : "—";
+          chart += "<div class=\"episode-average\">" + average + "</div>";
+        }
+        chart += "</div></div>";
+        if(incomplete) chart += "<p class=\"episode-footnote\" role=\"status\">No se pudieron consultar todas las temporadas de IMDb.</p>";
+        container.innerHTML = chart;
+      }
+      async function loadSeries(series){
+        clearStatus();searchResults.classList.add("hidden");detail.innerHTML="";results.hidden=false;
+        setStatus("Cargando…");
+        try{
+          var ratingParams=new URLSearchParams({type:"tv"});
+          if(series.original_name)ratingParams.set("original_title",series.original_name);
+          if(series.name)ratingParams.set("title",series.name);
+          var records=await Promise.all([
+            api("/api/tv/"+series.id),
+            api("/api/watch/"+series.id+"?type=tv").catch(()=>null),
+            api("/api/ratings/"+series.id+"?"+ratingParams.toString()).catch(()=>null)
+          ]);
+          var info=records[0],watch=records[1],mdb=records[2],region=watch?.results?.AR;
+          var ratings=mdb&&mdb.ratings||[];
+          var imdb=getRating(ratings,function(source){return source.indexOf("imdb")!==-1});
+          var tomatoesCritic=getRating(ratings,function(source){return source.indexOf("tomato")!==-1&&source.indexOf("audience")===-1&&source.indexOf("popcorn")===-1});
+          var tomatoesAudience=getRating(ratings,function(source){return source.indexOf("audience")!==-1||source.indexOf("popcorn")!==-1});
+          var rtCritic=ratingValue(tomatoesCritic),rtAudience=ratingValue(tomatoesAudience);
+          var creators=(info.created_by||[]).map(function(person){return person.name}).filter(Boolean).slice(0,3);
+          var protagonistNames=(info.credits&&info.credits.cast||[]).filter(function(person){return person.name}).map(function(person){return person.name}).filter(function(name,index,names){return names.indexOf(name)===index}).slice(0,2);
+          var genre=(info.genres||[]).slice(0,2).map(function(item){return item.name}).join(" · ");
+          var firstYear=(info.first_air_date||"").slice(0,4),lastYear=(info.last_air_date||"").slice(0,4);
+          var years=firstYear?(lastYear&&lastYear!==firstYear?firstYear+"–"+(["Ended","Canceled"].indexOf(info.status)>=0?lastYear:"en emisión"):firstYear):"";
+          var posterHtml=info.poster_path?"<img class=\"movie-poster\" src=\""+esc(poster(info.poster_path))+"\" alt=\"Póster de "+esc(info.name)+"\" loading=\"eager\">":"<div class=\"movie-poster poster-placeholder\" role=\"img\" aria-label=\"Póster no disponible\">🎬</div>";
+          var meta=[years,info.number_of_seasons?(info.number_of_seasons+" "+(info.number_of_seasons===1?"temporada":"temporadas")):"",info.number_of_episodes?(info.number_of_episodes+" "+(info.number_of_episodes===1?"episodio":"episodios")):"",genre].filter(Boolean).join(" · ");
+          var markup="<article class=\"detail series\" data-series-id=\""+esc(series.id)+"\"><div class=\"detail-top\"><div class=\"movie-heading\">"+posterHtml+"<div class=\"movie-heading-copy\"><h2 class=\"detail-title\">"+esc(info.name||series.name)+"</h2><div class=\"detail-meta\">"+esc(meta)+"</div>"+(creators.length?"<div class=\"detail-director\">Creada por: "+esc(creators.join(", "))+"</div>":"")+(protagonistNames.length?"<div class=\"detail-cast\">Protagonistas: "+esc(protagonistNames.join(", "))+"</div>":"")+"</div></div><button class=\"back\" type=\"button\" id=\"back-results\">"+(detailFromHome?"← Inicio":"← Resultados")+"</button></div>";
+          markup+="<div class=\"score-grid\">"+scoreCard("IMDb",ratingValue(imdb)," / 10","imdb");
+          markup+="<div class=\"score\"><div class=\"score-label\"><img class=\"rating-logo\" src=\"/assets/ratings/rottentomatoes.svg\" alt=\"\" width=\"17\" height=\"17\">Rotten Tomatoes</div><div class=\"rt-values\"><span class=\"critic\">Crítica "+(rtCritic?esc(rtCritic)+(rtCritic.indexOf("%")<0?"%":""):"—")+"</span><span class=\"audience\">Audiencia "+(rtAudience?esc(rtAudience)+(rtAudience.indexOf("%")<0?"%":""):"—")+"</span></div></div></div>";
+          markup+="<div class=\"availability\"><h3 class=\"availability-title\">Dónde verla en Argentina</h3><div class=\"offer-list\">"+providersHtml("Streaming",region&&region.flatrate)+providersHtml("Gratis / con anuncios",[...(region&&region.free||[]),...(region&&region.ads||[])])+providersHtml("Alquiler / compra",[...(region&&region.rent||[]),...(region&&region.buy||[])])+"</div>";
+          if(!region||!((region.flatrate||[]).length||(region.free||[]).length||(region.ads||[]).length||(region.rent||[]).length||(region.buy||[]).length))markup+="<div class=\"detail-meta\">Sin datos disponibles por ahora.</div>";
+          if(region&&region.link)markup+="<a class=\"justwatch\" href=\""+esc(region.link)+"\" target=\"_blank\" rel=\"noreferrer\">Ver opciones en JustWatch ↗</a>";
+          markup += "</div><section class=\"episode-section\">" +
+            "<div class=\"episode-heading\"><h3>Puntuación por episodio</h3><span class=\"episode-note\">IMDb · escala de 1 a 10</span></div>" +
+            "<div class=\"episode-legend\">" +
+            "<span class=\"legend-item\"><i class=\"legend-dot score-top\"></i>8.5+</span>" +
+            "<span class=\"legend-item\"><i class=\"legend-dot score-high\"></i>7–8.4</span>" +
+            "<span class=\"legend-item\"><i class=\"legend-dot score-mid\"></i>6–6.9</span>" +
+            "<span class=\"legend-item\"><i class=\"legend-dot score-low\"></i>5–5.9</span>" +
+            "<span class=\"legend-item\"><i class=\"legend-dot score-poor\"></i>&lt;5</span></div>" +
+            "<div id=\"episode-grid\"></div>" +
+            "<p class=\"episode-footnote\">Fuente <a class=\"episode-source\" target=\"_blank\" rel=\"noreferrer\">IMDb</a>. " +
+            "Los capítulos sin puntuación disponible aparecen con un guion. El promedio incluye las notas disponibles.</p>" +
+            "<p class=\"episode-footnote episode-credit-dataset\" lang=\"en\" hidden>Information courtesy of " +
+            "<a href=\"https://www.imdb.com/\" target=\"_blank\" rel=\"noreferrer\">IMDb</a>. Used with permission.</p>" +
+            "<p class=\"episode-footnote episode-credit-omdb\" hidden>Datos de <a href=\"https://www.omdbapi.com/\" target=\"_blank\" rel=\"noreferrer\">OMDb</a> " +
+            "con licencia <a href=\"https://creativecommons.org/licenses/by-nc/4.0/\" target=\"_blank\" rel=\"noreferrer\">CC BY-NC 4.0</a>.</p>" +
+            "</section></article>";
+          clearStatus();detail.innerHTML=markup;
+          document.getElementById("back-results").addEventListener("click",returnFromDetail);
+          document.querySelector(".detail").scrollIntoView({behavior:"smooth",block:"start"});
+          loadEpisodeGrid(info,mdb);
+        }catch(error){handleDetailError(error)}
+      }
+
+      window.addEventListener("beforeinstallprompt",function(event){event.preventDefault();pendingInstall=event});
+      document.getElementById("install-btn").addEventListener("click",async function(){
+        if(pendingInstall){
+          pendingInstall.prompt();var answer=await pendingInstall.userChoice;pendingInstall=null;
+          if(answer&&answer.outcome==="accepted")showToast("Butaca se está instalando.");
+          return;
+        }
+        var ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+        if(ios&&!window.navigator.standalone)showToast("En Safari: Compartir → Añadir a pantalla de inicio.");
+        else if(window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone)showToast("Butaca ya está instalada.");
+        else showToast("Abrí el menú del navegador y elegí “Instalar aplicación” o “Añadir a pantalla de inicio”.");
+      });
+      if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})});
+      loadHomeTrends();
+    })();
+  </script>
+</body>
+</html>

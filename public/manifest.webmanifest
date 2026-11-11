@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "Butaca",
+  "short_name": "Butaca",
+  "description": "Buscá películas y series.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait-primary",
+  "background_color": "#09070e",
+  "theme_color": "#09070e",
+  "icons": [
+    {
+      "src": "/assets/butaca-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
